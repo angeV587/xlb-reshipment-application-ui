@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>补发申请单优化交互原型</title><style>
+:root {
+  --xlb-blue: #3d66fe;
+  --xlb-light-blue: #e8f1ff;
+  --xlb-line: #e5e6ea;
+  --xlb-text: #24262b;
+  --xlb-muted: #92969e;
+  --xlb-background: #f2f3f7;
+  --xlb-selected: #c8dcff;
+  --xlb-table-head: #fafafa;
+  --xlb-row-alt: #f7f8fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Arial, Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
+  color: var(--xlb-text);
+  font-size: 13px;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--xlb-background); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #9bb5ff; outline-offset: 1px; }
+svg { flex: none; vertical-align: middle; }
+[hidden] { display: none !important; }
+.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+.icon.small { width: 13px; height: 13px; }
+
+.shell { display: grid; grid-template-columns: 120px minmax(0, 1fr); grid-template-rows: 48px minmax(calc(100vh - 48px), auto); min-width: 1180px; min-height: 100vh; }
+.topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 20px; height: 48px; padding: 0 14px; color: #fff; background: var(--xlb-blue); }
+.brand { display: inline-flex; align-items: center; width: 100px; flex: none; color: #fff; text-decoration: none; }
+.brand img, .brand svg { display: block; max-width: 98px; max-height: 40px; }
+.brand-text { font-size: 23px; font-weight: 700; font-style: italic; line-height: 1; white-space: nowrap; }
+.topbar .icon { width: 20px; height: 20px; }
+.app-grid { display: grid; grid-template-columns: repeat(3, 3px); gap: 3px; width: 24px; height: 24px; place-content: center; }
+.app-grid i { width: 3px; height: 3px; background: currentColor; }
+.topbar-search { display: flex; align-items: center; gap: 10px; width: 280px; height: 32px; padding: 0 10px; background: rgba(255, 255, 255, .26); border-radius: 4px; }
+.topbar-search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: none; color: #fff; background: transparent; }
+.topbar-search input::placeholder { color: rgba(255, 255, 255, .78); }
+.topbar-spacer { flex: 1; }
+.topbar-tools { display: flex; align-items: center; gap: 18px; }
+.topbar-organization { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 14px; }
+.topbar-user { display: flex; align-items: center; gap: 10px; padding-left: 18px; border-left: 1px solid rgba(255, 255, 255, .3); white-space: nowrap; }
+.topbar-user > span { display: flex; flex-direction: column; align-items: flex-end; line-height: 18px; }
+.topbar-user small { font-size: 12px; }
+.avatar-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #6f747c; }
+
+.sidebar { grid-column: 1; grid-row: 2; background: #fff; border-right: 1px solid var(--xlb-line); }
+.system-title { height: 58px; display: flex; align-items: center; padding-left: 16px; white-space: nowrap; font-size: 14px; }
+.sidebar-item { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; height: 50px; padding: 0 18px; border: 0; color: #333; background: #fff; text-align: left; white-space: nowrap; font-size: 14px; }
+.sidebar-item .icon { width: 19px; height: 19px; }
+.sidebar-item.active { color: var(--xlb-blue); background: var(--xlb-light-blue); }
+.sidebar-item.active::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 3px; background: var(--xlb-blue); }
+
+.workspace { grid-column: 2; grid-row: 2; min-width: 0; }
+.page-tabs { display: flex; align-items: stretch; height: 32px; overflow-x: auto; background: #fff; border-bottom: 1px solid var(--xlb-line); }
+.page-tabs > button, .page-tabs > a { display: inline-flex; align-items: center; justify-content: center; gap: 12px; flex: none; height: 32px; min-width: 120px; margin: 0; padding: 0 17px; border: 0; border-right: 1px solid var(--xlb-line); background: #fff; color: var(--xlb-text); text-decoration: none; white-space: nowrap; font-size: 14px; }
+.page-tabs > .active { position: relative; color: var(--xlb-text); }
+.page-tabs > .active::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: #1890ff; }
+.page-tabs .close { display: inline-flex; padding: 0; border: 0; color: #5a606b; background: transparent; }
+
+.content { position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 104px); min-width: 0; margin: 12px; padding: 12px; border-radius: 6px; background: #fff; }
+.toolbar { display: flex; align-items: center; gap: 8px; min-height: 28px; margin-bottom: 12px; flex: none; }
+.toolbar .spacer { flex: 1; }
+.toolbar-tools { display: flex; align-items: center; gap: 14px; margin-left: auto; color: var(--xlb-blue); }
+.toolbar-tools > button { display: flex; padding: 0; border: 0; color: inherit; background: transparent; }
+.toolbar-tools .icon { width: 17px; height: 17px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: none; height: 28px; padding: 0 12px; border: 1px solid transparent; border-radius: 4px; color: var(--xlb-blue); background: var(--xlb-light-blue); white-space: nowrap; text-decoration: none; line-height: 26px; font-size: 14px; }
+.btn.primary { color: #fff; background: var(--xlb-blue); }
+.btn.outline { border-color: #d9dce4; color: #555b66; background: #fff; }
+.btn:disabled, .btn.disabled { color: #c1c4ca; background: #f4f5f6; border-color: transparent; pointer-events: none; }
+.btn:not(:disabled):hover { filter: brightness(.98); }
+.btn.text { height: auto; padding: 0; border: 0; border-radius: 0; color: var(--xlb-blue); background: transparent; line-height: inherit; font-size: inherit; }
+.btn.text:hover { text-decoration: underline; filter: none; }
+.export-menu { position: relative; display: inline-flex; }
+.dropdown-menu { position: absolute; z-index: 12; top: calc(100% + 4px); left: 0; display: none; min-width: 112px; padding: 4px 0; border: 1px solid #e9ebef; border-radius: 3px; background: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, .1); }
+.export-menu:hover .dropdown-menu, .export-menu:focus-within .dropdown-menu { display: block; }
+.dropdown-menu button { display: block; width: 100%; min-height: 30px; padding: 4px 12px; border: 0; background: #fff; color: #333; text-align: left; white-space: nowrap; }
+.dropdown-menu button:hover { background: var(--xlb-light-blue); }
+.dropdown-menu button:disabled { color: #c1c4ca; }
+
+.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 24px; margin: 0 8px 18px; flex: none; }
+.filters.five-columns { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.field { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 28px; margin: 0; }
+.field > label, .field > .label, .field > span:first-child:not(.control) { flex: 0 0 94px; min-width: 0; text-align: right; white-space: nowrap; font-size: 14px; font-weight: 400; }
+.field .required::before { content: "*"; margin-right: 4px; color: #f2545c; }
+.field > .control, .field > .control-wrap, .field > select, .field > input, .field > textarea { flex: 1; width: 100%; min-width: 0; }
+.field.wide { grid-column: span 2; }
+.field.full { grid-column: 1 / -1; }
+.control { min-width: 0; height: 28px; padding: 0 10px; border: 1px solid #dcdfe5; border-radius: 4px; outline: 0; color: #333; background: #fff; font-size: 14px; line-height: 26px; }
+input.control::placeholder, textarea.control::placeholder { color: #c4c7ce; }
+.control:focus { border-color: #7b9bff; }
+.control:disabled, .control.readonly { color: #9298a2; background: #f6f7f9; border-color: #e3e5ea; }
+textarea.control { min-height: 28px; height: 52px; padding: 4px 10px; line-height: 20px; resize: vertical; }
+select.control { padding-right: 24px; }
+.control-wrap { position: relative; display: flex; align-items: center; min-width: 0; }
+.control-wrap .control { width: 100%; padding-right: 29px; }
+.control-wrap .icon-end { position: absolute; right: 0; top: 0; display: flex; align-items: center; justify-content: center; width: 29px; height: 28px; padding: 0; border: 0; border-left: 1px solid #e5e6ea; border-radius: 0 4px 4px 0; color: #40464f; background: transparent; }
+.date-range { display: flex; align-items: center; flex: 1; width: 100%; min-width: 0; height: 28px; border: 1px solid #dcdfe5; border-radius: 4px; }
+.date-range > select { flex: 0 0 50px; width: 50px; height: 26px; padding-left: 8px; border: 0; border-right: 1px solid #e5e6ea; outline: 0; color: #333; background: #fff; font-size: 14px; }
+.date-range > input { flex: 1; width: 0; min-width: 0; height: 26px; padding: 0 8px; border: 0; outline: none; color: #333; background: #fff; font-size: 14px; }
+.date-range > span { flex: none; margin: 0 4px; font-size: 14px; }
+.date-range > .icon { margin-right: 8px; color: #b9bdc7; }
+
+.table-wrap { position: relative; flex: 1; min-width: 0; min-height: 250px; overflow: auto; border: 1px solid var(--xlb-line); }
+.table { width: 100%; min-width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; }
+.table th, .table td { overflow: hidden; padding: 3px 8px; border-right: 1px solid var(--xlb-line); border-bottom: 1px solid var(--xlb-line); text-align: left; text-overflow: ellipsis; white-space: nowrap; line-height: 21px; vertical-align: middle; }
+.table th:last-child, .table td:last-child { border-right: 0; }
+.table thead th { position: sticky; top: 0; z-index: 2; height: 32px; padding-top: 5px; padding-bottom: 5px; background: var(--xlb-table-head); color: #20232a; font-size: 14px; font-weight: 600; }
+.table tbody td { height: 28px; background: #fff; }
+.table tbody tr:nth-child(even) td { background: var(--xlb-row-alt); }
+.table tbody tr:hover td { background: #e8f1ff; }
+.table tbody tr.selected td { background: var(--xlb-selected); }
+.table .check { width: 40px; padding-left: 12px; padding-right: 12px; text-align: center; }
+.table .number { width: 44px; text-align: center; }
+.table .right { text-align: right; }
+.table .center { text-align: center; }
+.table .wrap { white-space: normal; }
+.table a, .link { padding: 0; border: 0; color: #455bea; background: transparent; text-decoration: underline; font: inherit; cursor: pointer; }
+.table .muted { color: #92969e; }
+.table .failure { white-space: normal; }
+.table tfoot td { position: sticky; bottom: 0; z-index: 2; height: 28px; background: #fff; font-size: 14px; }
+.table .row-action { display: inline-flex; align-items: center; gap: 8px; }
+input[type="checkbox"] { width: 16px; height: 16px; margin: 0; vertical-align: middle; accent-color: var(--xlb-blue); }
+input[type="radio"] { width: 15px; height: 15px; margin: 0; accent-color: var(--xlb-blue); }
+.status { font-size: 13px; }
+.status.review { color: #e89235; }
+.status.success { color: #35a354; }
+.status.void { color: #92969e; }
+.empty { padding: 90px 20px; color: #a5a8af; text-align: center; font-size: 13px; line-height: 21px; }
+.pagination { display: flex; align-items: center; gap: 12px; height: 42px; min-height: 42px; padding: 6px 0 0; color: #333; font-size: 13px; }
+.pagination .selection { margin-right: auto; padding-left: 8px; color: #999da5; }
+.pagination .pages { display: inline-flex; align-items: center; gap: 8px; }
+.pagination button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 3px; color: #555; background: #fff; }
+.pagination button.current { color: #fff; background: var(--xlb-blue); }
+.pagination button:disabled { color: #c3c7ce; }
+.pagination select, .pagination input { height: 26px; padding: 0 7px; border: 1px solid #dcdfe5; border-radius: 3px; background: #fff; color: #333; font-size: 13px; }
+.pagination input { width: 42px; }
+
+.detail-tabs, .tabs { display: flex; align-items: stretch; gap: 26px; min-height: 32px; height: 32px; border-bottom: 1px solid #edf0f4; flex: none; }
+.detail-tabs { margin: -2px 0 0; }
+.detail-tabs > button, .tabs > button { position: relative; display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0; border: 0; color: #333; background: transparent; font-size: 13px; }
+.detail-tabs > button.active, .tabs > button.active { color: #455bea; }
+.detail-tabs > button.active::after, .tabs > button.active::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: #455bea; }
+.detail-form { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; gap: 12px 24px; padding: 16px 8px 16px; flex: none; }
+.detail-form .field > label, .detail-form .field > .label, .detail-form .field > span:first-child:not(.control) { flex-basis: 104px; font-size: 13px; }
+.detail-form.has-stamp { padding-right: 112px; }
+.detail-form .span-2 { grid-column: span 2; }
+.detail-form .span-3 { grid-column: span 3; }
+.detail-form .span-4 { grid-column: 1 / -1; }
+.stamp { position: absolute; top: 12px; right: 8px; display: flex; align-items: center; justify-content: center; width: 88px; height: 88px; border: 3px double #96999e; border-radius: 50%; color: #72767d; background: #fff; }
+.stamp::before { content: ""; position: absolute; inset: 7px; border: 1px solid #a3a6ac; border-radius: 50%; }
+.stamp > span { position: relative; display: block; width: calc(100% + 10px); padding: 2px 4px; border: 2px solid #92969e; color: inherit; background: #fff; text-align: center; line-height: 26px; font-size: 21px; }
+.detail-table-toolbar { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; flex: none; }
+.detail-table-footer { display: flex; align-items: center; gap: 8px; height: 42px; min-height: 42px; padding-top: 6px; }
+.detail-table-footer .pagination { margin-left: auto; padding: 0; }
+.detail-table-footer input { width: 128px; }
+.quantity { width: 92px; height: 24px; padding: 0 6px; border: 1px solid #dcdfe5; border-radius: 3px; color: #333; background: #fff; text-align: right; }
+.proof { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #e0e3e8; border-radius: 2px; color: #adb3be; background: #f6f7f9; vertical-align: middle; }
+.proof img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.proof .icon { width: 22px; height: 22px; }
+.table .proof-cell { padding-top: 5px; padding-bottom: 5px; }
+
+.modal-mask { position: fixed; z-index: 100; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(0, 0, 0, .45); }
+.modal { display: flex; flex-direction: column; width: 920px; max-width: calc(100vw - 48px); max-height: calc(100vh - 48px); border-radius: 4px; background: #fff; box-shadow: 0 4px 16px rgba(0, 0, 0, .16); }
+.modal.small { width: 520px; }
+.modal.medium { width: 680px; }
+.modal-header { display: flex; align-items: center; min-height: 48px; padding: 0 20px; border-bottom: 1px solid #e8ebef; }
+.modal-header h2 { margin: 0; font-size: 16px; font-weight: 500; line-height: 22px; }
+.modal-header .close { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-left: auto; padding: 0; border: 0; color: #7c828d; background: transparent; }
+.modal-body { min-height: 0; padding: 16px 20px; overflow: auto; }
+.modal-body .table-wrap { min-height: 220px; max-height: 410px; }
+.dialog-form { display: grid; gap: 14px; }
+.dialog-form .field > label, .dialog-form .field > .label, .dialog-form .field > span:first-child:not(.control) { flex-basis: 144px; font-size: 14px; }
+.dialog-form .radio-group { flex: 1; }
+.radio-group { display: flex; align-items: center; gap: 24px; min-height: 28px; }
+.radio-group label { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 14px; }
+.modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-height: 52px; padding: 12px 20px; border-top: 1px solid #e8ebef; }
+.modal-footer .selection { margin-right: auto; color: #92969e; }
+.modal-footer .btn { min-width: 64px; }
+.modal .filters { margin: 0 0 14px; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+.modal .tabs { margin-bottom: 10px; }
+.modal .pagination { min-height: 36px; height: 36px; }
+
+.annotation { display: flex; align-items: flex-start; gap: 7px; margin: 8px 0; color: #b94040; font-size: 13px; line-height: 21px; }
+.annotation .number { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none; border: 1px solid #d95757; border-radius: 50%; font-size: 12px; }
+.annotation-area { padding: 12px 16px; background: #fff; }
+.annotation-area h2 { margin: 0 0 8px; color: #333; font-size: 14px; font-weight: 500; }
+.annotation-target { outline: 2px solid #e45e5e; outline-offset: 3px; }
+
+@media (max-width: 1280px) {
+  .filters { gap: 6px 16px; }
+  .field > label, .field > .label, .field > span:first-child:not(.control) { flex-basis: 80px; }
+  .detail-form { gap: 12px 16px; }
+  .detail-form .field > label, .detail-form .field > .label, .detail-form .field > span:first-child:not(.control) { flex-basis: 88px; }
+  .topbar-tools { gap: 12px; }
+}
+
+.table .check { width: 44px; min-width: 44px; padding: 0 10px; overflow: visible; text-overflow: clip; }
+.pagination > .xlb-combobox { flex: 0 0 110px !important; width: 110px; }
+.pagination .xlb-combobox > .control { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 28px; padding: 0 8px; border: 1px solid #dcdfe5; border-radius: 4px; color: #333; background: #fff; }
+.pagination .xlb-combobox .dropdown-menu button { justify-content: flex-start; width: 100%; height: auto; min-height: 30px; padding: 4px 12px; border-radius: 0; text-align: left; }
+
+.calendar-popup { position: fixed; z-index: 120; display: flex; width: 576px; padding: 0; border: 1px solid #e5e6ea; border-radius: 4px; color: #333; background: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, .12); font-size: 12px; }
+.calendar-shortcuts { display: flex; flex: 0 0 98px; flex-direction: column; padding: 8px 0; border-right: 1px solid #e5e6ea; }
+.calendar-shortcuts button { display: block; width: 100%; height: 30px; padding: 0 14px; border: 0; color: #333; background: #fff; text-align: left; font-size: 12px; }
+.calendar-shortcuts button:hover { color: var(--xlb-blue); background: var(--xlb-light-blue); }
+.calendar-months { display: flex; flex: 1; min-width: 0; }
+.calendar-month { flex: 1; min-width: 0; padding: 0 10px 8px; }
+.calendar-month + .calendar-month { border-left: 1px solid #edf0f4; }
+.calendar-header { display: flex; align-items: center; justify-content: space-between; height: 36px; color: #333; font-size: 12px; }
+.calendar-header > span:first-child, .calendar-header > span:last-child { width: 22px; }
+.calendar-header button { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 24px; padding: 0; border: 0; color: #8f949e; background: transparent; font-size: 18px; }
+.calendar-header button:hover { color: var(--xlb-blue); }
+.calendar-grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.calendar-grid th, .calendar-grid td { height: 28px; padding: 0; border: 0; background: #fff; text-align: center; font-size: 12px; font-weight: 400; }
+.calendar-grid th { color: #5b606a; }
+.calendar-grid button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 2px; color: #333; background: transparent; font-size: 12px; }
+.calendar-grid button:hover { background: #f2f4f7; }
+.calendar-grid button.outside { color: #c3c6ce; }
+.calendar-grid button.range { width: 100%; border-radius: 0; color: #333; background: var(--xlb-light-blue); }
+.calendar-grid button.selected { color: #fff; background: var(--xlb-blue); }
+
+/* Review annotations are outside the normal prototype mode. */
+.annotated[data-view="config"] [data-action="approval-settings"],
+.annotated[data-view="config"] [data-action="new-reason"],
+.annotated[data-view="list"] .field:has([data-field="filter.time"]),
+.annotated[data-view="list"] .date-range,
+.annotated[data-view="list"] .table th:nth-child(11),
+.annotated[data-view="list"] .table th:nth-child(12),
+.annotated[data-view="list"] .table th:nth-child(13),
+.annotated[data-view="detail"] .table th:nth-child(6),
+.annotated .modal .dialog-form .field { outline: 1px solid #e56a6a; outline-offset: 2px; }
+
+</style></head><body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden">
+    <defs>
+      <symbol id="icon-search" viewBox="0 0 1024 1024"><path stroke="none" d="M464 64c220.914 0 400 179.086 400 400 0 97.495-34.88 186.843-92.842 256.246l132.355 132.356c6.249 6.248 6.249 16.379 0 22.627l-28.284 28.284c-6.248 6.249-16.38 6.249-22.627 0L720.246 771.158C650.843 829.12 561.495 864 464 864 243.086 864 64 684.914 64 464S243.086 64 464 64z m0 72c-181.15 0-328 146.85-328 328s146.85 328 328 328 328-146.85 328-328-146.85-328-328-328z" fill="currentColor"></path></symbol>
+      <symbol id="icon-plus" viewBox="0 0 1024 1024"><path stroke="none" d="M536 112c8.837 0 16 7.163 16 16v344h344c8.837 0 16 7.163 16 16v48c0 8.837-7.163 16-16 16H551.999L552 896c0 8.837-7.163 16-16 16h-48c-8.837 0-16-7.163-16-16l-0.001-344.001L128 552c-8.837 0-16-7.163-16-16v-48c0-8.837 7.163-16 16-16l344-0.001V128c0-8.837 7.163-16 16-16h48z" fill="currentColor"></path></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+      <symbol id="icon-down" viewBox="0 0 24 24"><path d="m5 9 7 7 7-7"/></symbol>
+      <symbol id="icon-back" viewBox="0 0 1024 1024"><path stroke="none" d="M443.329 568.28c6.248 6.248 6.248 16.378 0 22.627l-28.284 28.284c-6.249 6.248-16.38 6.248-22.628 0L175.335 402.109c-18.745-18.745-18.745-49.137 0-67.882l217.082-217.082c6.249-6.248 16.38-6.248 22.628 0l28.284 28.284c6.248 6.249 6.248 16.38 0 22.628L279.385 332H816c26.51 0 48 21.49 48 48v440c0 26.51-21.49 48-48 48H176c-8.837 0-16-7.163-16-16v-40c0-8.837 7.163-16 16-16h616V404H279.049l164.28 164.28z" fill="currentColor"></path></symbol>
+      <symbol id="icon-save" viewBox="0 0 1024 1024"><path stroke="none" d="M388.992 168.96v161.024h246.016V169.024H388.992z m-72 0H200v688h624V168.96h-116.992v156.224c0 26.88-0.064 40.64-5.376 50.88a48.256 48.256 0 0 1-20.608 20.544c-10.24 5.312-23.872 5.376-50.752 5.376H393.792c-26.88 0-40.64 0-50.88-5.312a48.192 48.192 0 0 1-20.544-20.608c-5.312-10.24-5.376-24-5.376-50.88v-156.16z m358.016-72.96c2.752 0 5.44 0.32 8 1.024H819.2c26.88 0 40.512 0 50.752 5.376 8.768 4.48 16 11.712 20.608 20.48 5.312 10.24 5.376 24.064 5.376 50.944v678.4c0 26.88-0.064 40.576-5.376 50.816a48.32 48.32 0 0 1-20.608 20.608c-10.24 5.248-23.872 5.376-50.752 5.376H204.736c-26.88 0-40.512-0.128-50.752-5.376a48.256 48.256 0 0 1-20.608-20.608c-5.312-10.24-5.376-23.936-5.376-50.88v-678.4c0-26.88 0.064-40.576 5.376-50.816a48.256 48.256 0 0 1 20.608-20.544c10.24-5.312 23.872-5.376 50.752-5.376h136.32a32 32 0 0 1 7.936-1.024h326.016z m9.344 496.576H345.6c-8.96 0-13.568 0-16.96 1.792a16 16 0 0 0-6.912 6.848C320 604.608 320 609.216 320 618.176v20.736c0 8.96 0 13.632 1.728 17.024a16.128 16.128 0 0 0 6.912 6.848c3.392 1.792 8 1.792 16.96 1.792h338.752c8.96 0 13.632 0 17.024-1.792a16.128 16.128 0 0 0 6.848-6.848c1.792-3.392 1.792-8.064 1.792-17.024V618.24c0-8.96 0-13.568-1.792-16.96a16 16 0 0 0-6.848-6.848c-3.392-1.792-8.064-1.792-17.024-1.792z" fill="currentColor"></path></symbol>
+      <symbol id="icon-file" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5Z"/><path d="M14 3v6h5M8 13h8M8 17h6"/></symbol>
+      <symbol id="icon-store" viewBox="0 0 24 24"><path d="M3 8h18l-2-5H5ZM4 8v13h16V8M9 21v-7h6v7"/></symbol>
+      <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M3 3h18v15H3ZM8 21h8M12 18v3M7 13l4-4 4 2 3-5"/></symbol>
+      <symbol id="icon-delivery" viewBox="0 0 24 24"><path d="M3 5h11v12H3ZM14 9h4l3 4v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+      <symbol id="icon-cart" viewBox="0 0 24 24"><path d="M2 3h3l3 13h12l2-10H6M9 20h.01M19 20h.01"/></symbol>
+      <symbol id="icon-stock" viewBox="0 0 24 24"><path d="m3 8 3-5h12l3 5v13H3ZM3 8h18M7 12h10M7 16h10"/></symbol>
+      <symbol id="icon-settings" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Z"/><circle cx="12" cy="12" r="4"/></symbol>
+      <symbol id="icon-collapse" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 14 4-4 4 4"/></symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M3 16v5h18v-5"/></symbol>
+      <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M3 5h18v16H3ZM3 10h18M7 3v5M17 3v5"/></symbol>
+    <symbol id="icon-audit" viewBox="0 0 1024 1024"><path stroke="none" d="M896 912H128c-8.837 0-16-7.163-16-16v-40c0-8.837 7.163-16 16-16h768c8.837 0 16 7.163 16 16v40c0 8.837-7.163 16-16 16zM512 105c108.248 0 196 87.752 196 196 0 53.583-21.501 102.143-56.347 137.525l-1.06 1.068c-12.261 12.261-16.322 28.779-15.907 47.464l0.036 1.307c0.029 0.874 0.067 1.752 0.115 2.635l170.496 0.001C864.243 491 912 538.756 912 597.667V744c0 26.51-21.49 48-48 48H160c-26.51 0-48-21.49-48-48V597.667C112 538.757 159.756 491 218.667 491l174.088-0.002c0.127-19.038-4.8-36.572-18.865-50.917l-0.483-0.488C337.938 404.123 316 355.123 316 301c0-107.165 86.006-194.243 192.759-195.974L512 105z m0 72c-68.483 0-124 55.517-124 124 0 33.064 12.906 63.907 35.627 86.984l0.692 0.697c27.86 27.86 40.444 63.014 40.438 101.629l-0.004 1.171-0.373 55.623c-0.06 8.795-7.205 15.893-16 15.893L218.667 563c-18.955 0-34.356 15.212-34.667 34.093V720h656V597.667c0-18.955-15.212-34.356-34.094-34.662l-0.573-0.005-223.564-0.001c-8.502 0-15.52-6.65-15.977-15.14l-2.851-52.99c-0.972-18.05 0.476-35.173 5.127-51.735 5.685-20.244 15.948-38.538 30.909-53.742l0.704-0.71C622.832 365.53 636 334.397 636 301c0-68.483-55.517-124-124-124z" fill="currentColor"></path></symbol>
+<symbol id="icon-delete" viewBox="0 0 1024 1024"><path stroke="none" d="M704 64H320v128H128v76.8h64V896a64 64 0 0 0 64 64h512a64 64 0 0 0 64-64V268.8h64V192h-192V64zM320 268.8h435.2v614.4H268.8V268.8H320zM627.2 192H396.8v-51.2h230.4V192zM448 768V384H371.2v384H448z m204.8 0V384H576v384h76.8z" fill="currentColor" fill-opacity=".7"></path></symbol>
+</defs>
+  </svg>
+<div id="app"></div><script>
+(() => {
+  'use strict';
+  const TODAY = '2026-11-13';
+  const STORAGE = 'xlb-reshipment-demo-v1';
+  const $ = (s, root = document) => root.querySelector(s);
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const icon = name => `<svg class="icon" aria-hidden="true"><use href="#icon-${name}"/></svg>`;
+  const btn = (text, action, glyph = '', disabled = false, extra = '') => `<button class="btn ${extra}" data-action="${action}" ${disabled ? 'disabled' : ''}>${glyph ? icon(glyph) : ''}${text}</button>`;
+  const field = (label, control, extra = '', required = false) => `<label class="field ${extra}"><span class="label ${required ? 'required' : ''}">${label}：</span>${control}</label>`;
+  const options = (items, value, empty = '') => `${empty ? `<option value="">${empty}</option>` : ''}${items.map(x => `<option value="${esc(x.id ?? x)}" ${(x.id ?? x) === value ? 'selected' : ''}>${esc(x.name ?? x)}</option>`).join('')}`;
+  const select = (name, items, value, empty = '', disabled = false) => `<select class="control" data-field="${name}" aria-label="${name}" ${disabled ? 'disabled' : ''}>${options(items,value,empty)}</select>`;
+  const text = (name, value = '', disabled = false, placeholder = '') => `<input class="control" data-field="${name}" aria-label="${name}" value="${esc(value)}" placeholder="${esc(placeholder)}" ${disabled ? 'disabled' : ''}>`;
+  const organizations = [{id:'o1',name:'示例二级组织A'},{id:'o2',name:'示例二级组织B'}];
+  const stores = [{id:'s1',name:'示例门店A',org:'o1'},{id:'s2',name:'示例门店B',org:'o2'}];
+  const products = [
+    {id:'p1',code:'DEMO-M001',name:'活动海报（示例）',spec:'1箱×20张',unit:'箱',basic:'张',barcode:'DEMO-001'},
+    {id:'p2',code:'DEMO-M002',name:'展示立牌（示例）',spec:'1箱×10个',unit:'箱',basic:'个',barcode:'DEMO-002'},
+    {id:'p3',code:'DEMO-M003',name:'会员说明卡（示例）',spec:'1包×100张',unit:'包',basic:'张',barcode:'DEMO-003'}
+  ];
+  const line = (id,qty=1) => ({id,qty,proof:true});
+  const makeRecord = (number, overrides={}) => ({id:`BF-DEMO-${String(number).padStart(3,'0')}`,store:'s1',org:'o1',reason:'r1',description:'示例补发申请',lines:[line('p1'),line('p2')],status:'制单',approval:'',requiresApproval:null,order:'',orderStatus:'',failure:'',reject:'',applicant:'演示用户甲',created:`${TODAY} 10:${String(number).padStart(2,'0')}:00`,audited:'',...overrides});
+  function seed() {
+    return {
+      reasons:[{id:'r1',name:'物料破损补发',description:'破损物料补发（示例）',orgs:['o1','o2'],products:['p1','p2'],enabled:true},{id:'r2',name:'活动换新补发',description:'活动物料换新（示例）',orgs:['o1'],products:['p1','p3'],enabled:true},{id:'r3',name:'新店物料补发',description:'新店物料补发（示例）',orgs:['o2'],products:['p2','p3'],enabled:true}],
+      settings:{'o1|r2':false},
+      records:[makeRecord(1),makeRecord(2,{status:'审核',approval:'审批中',requiresApproval:true,audited:`${TODAY} 10:02:00`}),makeRecord(3,{status:'审核',approval:'已通过',requiresApproval:true,audited:`${TODAY} 10:03:00`,failure:'配送中心或发货仓未配置'}),makeRecord(4,{reason:'r2',status:'审核',requiresApproval:false,audited:`${TODAY} 10:04:00`,failure:'门店订单制单失败，请稍后重试'}),makeRecord(5,{status:'审核',approval:'已通过',requiresApproval:true,audited:`${TODAY} 10:05:00`,order:'DD-DEMO-005',orderStatus:'制单',failure:'商品不在有效补货范围内'}),makeRecord(6,{status:'审核',approval:'已通过',requiresApproval:true,audited:`${TODAY} 10:06:00`,order:'DD-DEMO-006',orderStatus:'已审核'})],
+      history:[]
+    };
+  }
+  let db;
+  try { db=JSON.parse(localStorage.getItem(STORAGE)) || seed(); } catch { db=seed(); }
+  if (!Array.isArray(db.records)||!Array.isArray(db.reasons)) db=seed();
+  const params=new URLSearchParams(location.search);
+  const state={view:params.get('view')||'config',note:params.get('note')==='1',modal:null,parentModal:null,selected:[],selectedReasons:[],currentId:'',working:null,detailTab:'basic',picker:[],pickerQuery:'',filters:{number:'',store:'',reason:'',status:'',approval:'',time:'申请时间',grain:'日',start:TODAY,end:TODAY},configFilters:{name:'',enabled:'启用',org:'',product:''},permission:'完整权限',outcome:'success',demoRecord:'BF-DEMO-002',demoOpen:false};
+  const persist=()=>localStorage.setItem(STORAGE,JSON.stringify(db));
+  const orgName=id=>organizations.find(x=>x.id===id)?.name||'—';
+  const storeName=id=>stores.find(x=>x.id===id)?.name||'—';
+  const reasonName=id=>db.reasons.find(x=>x.id===id)?.name||'—';
+  const product=id=>products.find(x=>x.id===id);
+  const reason=id=>db.reasons.find(x=>x.id===id);
+  const permission=key=>state.permission==='完整权限'||(state.permission==='可编辑不可审核'&&['query','edit','delete','config'].includes(key))||(state.permission==='可审核不可编辑'&&['query','audit'].includes(key))||(state.permission==='无删除权限'&&key!=='delete')||(state.permission==='仅查询'&&key==='query');
+  const requires=(org,reasonId)=>db.settings[`${org}|${reasonId}`]!==false;
+  const eligible=record=>record.status==='审核'&&((record.requiresApproval===false)||record.approval==='已通过');
+  const canRetry=record=>eligible(record)&&!record.order&&!!record.failure&&permission('edit');
+  const now=()=>`${TODAY} ${new Date().toTimeString().slice(0,8)}`;
+  function notify(message,title='提示') { state.modal={type:'message',title,message};renderModal(); }
+  function navigate(view) {state.view=view;state.modal=null;state.parentModal=null;if(view!=='detail'){state.currentId='';state.working=null;}history.replaceState({},'',`?view=${view}${state.note?'&note=1':''}`);render();}
+  function openRecord(id) {const r=db.records.find(x=>x.id===id);if(!r)return;state.currentId=id;state.working=clone(r);state.detailTab='basic';state.view='detail';history.replaceState({},'',`?view=detail&id=${encodeURIComponent(id)}${state.note?'&note=1':''}`);render();}
+  function newRecord() {state.currentId='';state.working=makeRecord(db.records.length+1,{id:'',store:'',org:'',reason:'',description:'',lines:[],created:now()});state.detailTab='basic';state.view='detail';render();}
+  function toolbarTools(){return `<div class="toolbar-tools"><button aria-label="收起筛选" data-action="toggle-filters">${icon('collapse')}</button><button aria-label="列配置" data-action="columns">${icon('settings')}</button></div>`;}
+  function pagination(count,selected=0){return `<div class="pagination"><span class="selection">已选中 <b>${selected}</b> 条</span><span>共 ${count} 条</span><span class="pages"><button disabled aria-label="上一页">‹</button><button class="current">1</button><button disabled aria-label="下一页">›</button></span><select aria-label="每页条数"><option>200 条/页</option></select></div>`;}
+  function exportMenu(){return `<div class="export-menu">${btn('导出','export-menu','file',!permission('query'))}<div class="dropdown-menu">${btn('导出','export-list','',!permission('query'))}${btn('导出明细','export-detail','',!state.selected.length||!permission('query'))}</div></div>`;}
+  function configuration(){
+    const f=state.configFilters;
+    const rows=db.reasons.filter(x=>(!f.name||x.name.includes(f.name))&&(!f.enabled||(f.enabled==='启用')===x.enabled)&&(!f.org||x.orgs.includes(f.org))&&(!f.product||x.products.includes(f.product)));
+    return `<div class="toolbar">${btn('查询','query-config','search')}${btn('重置','reset-config')}${btn('新增','new-reason','plus',!permission('config'),'primary')}${btn('修改记录','history','file',!state.selectedReasons.length)}${btn('审批设置','approval-settings','settings',!permission('query'))}${toolbarTools()}</div>
+      <div class="filters" id="filter-panel">${field('原因名称',text('config.name',f.name))}${field('状态',select('config.enabled',['启用','停用'],f.enabled,'全部'))}${field('应用组织',select('config.org',organizations,f.org,'全部'))}${field('绑定商品',select('config.product',products,f.product,'全部'))}</div>
+      <div class="table-wrap"><table class="table"><colgroup>${[44,260,270,240,140,110,160,140].map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead><tr><th class="check"><input type="checkbox" aria-label="全选原因" data-action="check-all-reasons" ${rows.length&&rows.every(r=>state.selectedReasons.includes(r.id))?'checked':''}></th><th>原因名称</th><th>原因说明</th><th>应用组织</th><th class="right">绑定商品数</th><th>状态</th><th>修改人 / 修改时间</th><th>操作</th></tr></thead><tbody>${rows.map(r=>`<tr class="${state.selectedReasons.includes(r.id)?'selected':''}"><td class="check"><input type="checkbox" aria-label="选择${esc(r.name)}" data-reason-check="${r.id}" ${state.selectedReasons.includes(r.id)?'checked':''}></td><td title="${esc(r.name)}">${esc(r.name)}</td><td>${esc(r.description)}</td><td>${r.orgs.map(orgName).join('、')}</td><td class="right"><button class="link" data-action="reason-products" data-id="${r.id}">${r.products.length} 个商品</button></td><td><span class="status ${r.enabled?'success':'void'}">${r.enabled?'启用':'停用'}</span></td><td>演示用户<br><span class="muted">${TODAY} 09:00</span></td><td><span class="row-action"><button class="link" data-action="edit-reason" data-id="${r.id}" ${!permission('config')?'disabled':''}>编辑</button><button class="link" data-action="toggle-reason" data-id="${r.id}" ${!permission('config')?'disabled':''}>${r.enabled?'停用':'启用'}</button></span></td></tr>`).join('')}</tbody></table>${!rows.length?'<div class="empty">没有符合查询条件的数据<br>请修改条件后重新查询</div>':''}</div>${pagination(rows.length,state.selectedReasons.length)}`;
+  }
+  function dateValue(value,grain){if(!value)return '';if(grain==='月')return value.slice(0,7);if(grain==='年')return value.slice(0,4);return value.slice(0,10);}
+  function listRows(){const f=state.filters;return db.records.filter(r=>{const date=(f.time==='审核时间'?r.audited:r.created)||'';const start=dateValue(f.start,f.grain),end=dateValue(f.end,f.grain),d=dateValue(date,f.grain);return (!f.number||r.id.includes(f.number))&&(!f.store||r.store===f.store)&&(!f.reason||r.reason===f.reason)&&(!f.status||r.status===f.status)&&(!f.approval||r.approval===f.approval)&&(!start||d>=start)&&(!end||d<=end);});}
+  function list(){
+    const f=state.filters,rows=listRows();
+    return `<div class="toolbar">${btn('查询','query-list','search')}${btn('重置','reset-list')}${btn('新增','new','plus',!permission('edit'),'primary')}${btn('删除','delete','delete',!state.selected.length||!permission('delete'))}${btn('导入','import','file',!permission('edit'))}${exportMenu()}${toolbarTools()}</div>
+      <div class="filters five-columns" id="filter-panel">${field('申请单号',text('filter.number',f.number))}${field('申请门店',select('filter.store',stores,f.store,'全部'))}${field('补发原因',select('filter.reason',db.reasons,f.reason,'全部'))}${field('单据状态',select('filter.status',['制单','审核','作废'],f.status,'全部'))}${field('审批状态',select('filter.approval',['审批中','已通过','已驳回'],f.approval,'全部'))}${field('时间类型',select('filter.time',['申请时间','审核时间'],f.time))}${field('日期范围',`<div class="date-range"><select aria-label="日期粒度" data-field="filter.grain">${options(['日','周','月','年'],f.grain)}</select><input type="text" placeholder="开始日期" data-action="open-calendar" data-calendar-anchor="start" aria-label="开始日期" data-field="filter.start" value="${f.start}"><span>至</span><input type="text" placeholder="结束日期" data-action="open-calendar" data-calendar-anchor="end" aria-label="结束日期" data-field="filter.end" value="${f.end}"><button class="btn text" style="width:28px;min-width:28px;padding:0;color:#b9bdc7" data-action="open-calendar" aria-label="打开日期范围">${icon('calendar')}</button></div>`,'wide')}</div>
+      <div class="table-wrap"><table class="table" style="min-width:1875px"><colgroup>${[44,155,140,150,140,105,90,100,140,110,240,110,160].map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead><tr><th class="check"><input type="checkbox" aria-label="全选申请" data-action="check-all" ${rows.length&&rows.every(r=>state.selected.includes(r.id))?'checked':''}></th>${['申请单号','申请门店','所属二级组织','补发原因','商品/数量','单据状态','审批状态','关联门店订单','门店订单状态','单据未审核原因','申请人','申请时间'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr class="${state.selected.includes(r.id)?'selected':''}"><td class="check"><input type="checkbox" data-record-check="${r.id}" aria-label="选择${r.id}" ${state.selected.includes(r.id)?'checked':''}></td><td><button class="link" data-action="open" data-id="${r.id}">${r.id}</button></td><td>${storeName(r.store)}</td><td>${orgName(r.org)}</td><td>${reasonName(r.reason)}</td><td>${r.lines.length} 项 / ${r.lines.reduce((a,x)=>a+Number(x.qty),0)}</td><td><span class="status ${r.status==='审核'?'review':r.status==='作废'?'void':''}">${r.status}</span></td><td>${r.approval||'—'}</td><td>${r.order||'—'}</td><td>${r.orderStatus||'—'}</td><td class="failure" title="${esc(r.failure)}">${esc(r.failure||'—')}${canRetry(r)?` <button class="link" data-action="retry" data-id="${r.id}">重试</button>`:''}</td><td>${r.applicant}</td><td>${r.created}</td></tr>`).join('')}</tbody></table>${!rows.length?'<div class="empty">没有符合查询条件的数据<br>请修改条件后重新查询</div>':''}</div>${pagination(rows.length,state.selected.length)}`;
+  }
+  function detail(){
+    const r=state.working;if(!r)return '<div class="empty">未选择补发申请单</div>';
+    const editable=r.status==='制单'&&permission('edit'),auditable=r.status==='制单'&&permission('audit');
+    const reasons=db.reasons.filter(x=>x.orgs.includes(r.org)&&x.enabled);
+    return `<div class="toolbar">${btn('保存','save','save',!editable)}${btn('审核','audit','audit',!auditable)}${btn('导出','export-current','file',!r.id)}${r.status==='审核'&&r.approval==='审批中'&&!r.order?`<div class="export-menu">${btn('业务操作','business','down')}<div class="dropdown-menu">${btn('作废','void')}</div></div>`:''}${btn('返回','back','back')}${toolbarTools()}</div>
+      <nav class="detail-tabs"><button class="${state.detailTab==='basic'?'active':''}" data-action="tab-basic">基本信息</button><button class="${state.detailTab==='other'?'active':''}" data-action="tab-other">其他信息</button></nav>
+      ${state.detailTab==='basic'?`<div class="detail-form has-stamp">${field('申请门店',select('detail.store',stores,r.store,'请选择',!editable),'',true)}${field('所属二级组织',text('readonly.org',orgName(r.org),true))}${field('申请单号',text('readonly.id',r.id||'保存后生成',true))}${field('审批状态',text('readonly.approval',r.approval||'—',true))}${field('补发原因',select('detail.reason',reasons,r.reason,'请选择',!editable),'',true)}${field('申请说明',`<div class="control-wrap" style="display:block"><textarea class="control" data-field="detail.description" aria-label="申请说明" maxlength="500" ${!editable?'disabled':''}>${esc(r.description)}</textarea><small data-counter="detail.description" style="position:absolute;right:8px;bottom:4px;color:#92969e;background:inherit">${r.description.length}/500</small></div>`,'span-2')}<div class="stamp"><span>${r.status}</span></div></div>`:`<div class="detail-form">${field('申请人',text('readonly.applicant',r.applicant,true))}${field('申请时间',text('readonly.created',r.created,true))}${field('审核人',text('readonly.auditor',r.audited?'演示审核人':'—',true))}${field('审核时间',text('readonly.audited',r.audited||'—',true))}${field('关联门店订单',text('readonly.order',r.order||'—',true))}${field('门店订单状态',text('readonly.orderStatus',r.orderStatus||'—',true))}${field('单据未审核原因',text('readonly.failure',r.failure||'—',true),'span-2')}${r.reject?field('审批驳回原因',text('readonly.reject',r.reject,true),'span-4'):''}</div>`}
+      <div class="detail-table-toolbar">${btn('添加商品','pick-products','plus',!editable||!r.reason)}</div>
+      <div class="table-wrap"><table class="table"><colgroup>${[44,80,160,270,210,115,130,140].map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead><tr><th class="number">序号</th><th>操作</th><th>商品编码</th><th>商品名称</th><th>规格</th><th>配送单位</th><th class="right">申请数量</th><th>图片凭证</th></tr></thead><tbody>${r.lines.map((ln,i)=>{const p=product(ln.id);return `<tr><td class="number">${i+1}</td><td>${editable?`<button class="link" data-action="remove-line" data-id="${ln.id}">删除</button>`:''}</td><td>${p.code}</td><td>${p.name}</td><td>${p.spec}</td><td>${p.unit}</td><td class="right">${editable?`<input class="quantity" type="number" min="0.001" step="1" data-quantity="${p.id}" aria-label="${p.name}申请数量" value="${ln.qty}">`:ln.qty}</td><td class="proof-cell"><button class="proof" data-action="proof" data-id="${p.id}" title="${ln.proof?'查看示例凭证':'补充示例凭证'}">${icon('file')}</button><span>${ln.proof?' 已上传':' 未上传'}</span></td></tr>`;}).join('')}</tbody><tfoot><tr><td colspan="6">合计</td><td class="right">${r.lines.reduce((a,x)=>a+Number(x.qty||0),0).toFixed(3)}</td><td></td></tr></tfoot></table>${!r.lines.length?'<div class="empty">没有符合查询条件的数据<br>请添加补发商品</div>':''}</div>
+      <div class="detail-table-footer"><span>关键字：</span><input class="control" data-field="detail.keyword" aria-label="明细关键字">${btn('上一条','previous-line')}${btn('下一条','next-line')}${pagination(r.lines.length)}</div>${r.reject?`<p>审批驳回原因：${esc(r.reject)}</p>`:''}`;
+  }
+  function annotation(){if(!state.note)return '';const notes=state.view==='config'?['仅【新增】采用主按钮样式；【重置】【修改记录】【审批设置】沿用普通按钮。','【审批设置】位于顶部，按二级组织＋补发原因配置，未配置默认走审批。','列表沿用门店订单密度；移除原顶部说明。']:state.view==='list'?['统一功能名称；单号进入详情；仅【新增】为主按钮，导出菜单沿用通用交互。','时间类型支持申请时间／审核时间，日期范围默认今天，支持日／周／月／年。','制单可批量删除；失败原因与重试承接既有优化，申请人、申请时间分列。']:['详情沿用门店订单顶部操作、信息页签、四列表单、状态章与明细表格。','【审核】由二级组织＋补发原因配置决定走审批或直接出单；审核权限独立。','选品及已选明细新增配送单位，与申请数量一致；原两条说明移除。'];return `<aside class="annotation-area"><h2>本页改动标注（示意图）</h2>${notes.map((x,i)=>`<div class="annotation"><span class="number">${i+1}</span><span>${x}</span></div>`).join('')}</aside>`;}
+  function demo(){return `<details id="demo-control" ${state.demoOpen?'open':''} style="padding:8px 16px;background:#fff;border-top:1px solid #e5e6ea;font-size:13px"><summary>原型演示控制（非业务页面）</summary><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:8px"><label>权限 ${select('demo.permission',['完整权限','仅查询','可编辑不可审核','可审核不可编辑','无删除权限'],state.permission)}</label><label>出单结果 ${select('demo.outcome',[{id:'success',name:'审核成功'},{id:'saveFail',name:'制单失败（无订单）'},{id:'auditFail',name:'审核失败（保留原订单）'},{id:'approvalFail',name:'审批发起失败'}],state.outcome)}</label><label>模拟审批单 ${select('demo.record',db.records.map(r=>({id:r.id,name:`${r.id} / ${r.approval||'未走审批'}`})),state.demoRecord)}</label>${btn('模拟审批通过','demo-approve')}${btn('模拟审批驳回','demo-reject')}${btn('恢复示例数据','demo-reset')}</div></details>`;}
+  function shell(){return `<div class="shell"><header class="topbar"><span class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOIAAABSCAYAAABJ2giiAAAAAXNSR0IArs4c6QAAE7RJREFUeF7tXXvwddUYfl65hvCRa43qq6lEiiIUFUVSTJQKlSlFhuoPKlKUjDQjUVTIpSHEyAy5NU1DIkoNFYoUE1FT5M7wmufMu87ss39r7b3WOXuts8/57TVz5nzf7+y9Lu9az3rf9d6WYCi9pICqPgTAEwE8AcD6AB4L4NEAHgPg4fZZD8BD7fNAAOsA4Hu+8k8A/wJwL4BfA/ilfd8OgJ/fAPitiPytlwRZ8k7Jko+v18NTVQJpCwBPArAlgLUANrLPI6fs/F8B3ADgZgC3GNj4TaDdISIE5FB6RoEBiIUmRFU3AbANgKfbZysAG8zY/B8B/ADAjwD8BMBPAdwqIjpjvcPrhSkwADEDwVX1QQCeAWBHADvZvx/RQVMUJy8F8B0CUEQoYiYVVeWcU7zd0ERe9st9KNquC+D+Vuk/TJz9O4B/AyC3vQvA702c/YOI/CepA8PDXgoMQOxgYagqF+6zAOwOYFfjePfroGqe574B4OsALhMRipdRRVV5dtwWwJMBbG6i72Z25uyib64f5MrcEG4EcL1935jS16gBLflDAxCnnGBV3RjAXgB2A7ALgAdPWVX9NXKbLwP4CoDLRYScqLWo6qYAdjYOvJ2dPe/T+mK+B+4BcIV9vgvgmtix5OtSf2segJgwN6pKDvMy+2yd8Grbo+R8FwH4rIHvf20vmFaVm8BLALzQNKp3ALjbNKOs408AHgaA88zvNaZ9daJnWzNd/k4x9/sAvsaPiPyiy8oXva4BiC0zqKoU7V4FYH/TZnY555cBOJfcT0RoWmgsBj5yX5o1aM7gmZEa0ttEhCJiVFFVApLKI2prKbY+DcAOZhKJqqODhwhEbj6fFxGKtKu6DED0TL+qUpv5agMggdhlIcc6nwAUEQIpqhgIH0/wiUgrx4yqtPKQKXFoSnkBgBebmEvbZIlyLYBPAPiMiJA+q64MQLQpV9X7mph3GIA9AHR9viLozuCCExGKab0upvnlGZgbEulB+uQutHFeCOAsEflx7sb6VP+qB6JxvzcAONTU+l3PD3f7U6mAycHJuu6srz5VfRQAblBHmtmjRLMU208TkW+VaGzebaxaIKoqz0RHA3h5pt3+OgDvsvPfUhjYTWp4BYATzRxSYv1eBeCdIkIzztKWVQVEVaW4Sa3ncQC2zzSrdC07FsDFy+rhYnTcD8DJAGibLFFoCjlGRK4u0VjpNlYFEG0nP9AASJ/OHIV2M3LAD68WbxNzZKBUcYI5nuega73OCwC8VURoqlmastRANAAebAuFztQ5CjWYZwM4SUQIxlVXVPVxAD5m2tYS4/8zgLcBOGdRz911Ii0lEE0V/8oCohM1e4eLyDUlVl/f21DVQwCcCYBRJSUKxdWDpvG5LdG5lDaWDoiqSi+T91qkQwotUp5lzB7FsQ+JyH9TXlz2Z1WVoVxfAvDUQmPlXBwtIuTIC1uWBoiqSg+R9xcQj64EcIiIUCkzFA8FVJWOAOcA4LGgVPmcSSd/KdVgl+0sPBBVlSE8JwF4YyYzhKM3na/ZzukDF4xbgqr6dgDvjnu6k6d+Rq24iNzUSW0FK1loIKoqvT7IBZlKImdhhPt+w1kwncSqepC5r3XtqRTqDBU5+4rIt9N7O783FhKIqkrb1UcAPL8A6S4G8FoRYSTDUKaggKruSz9SAF3GQTb1hMHKVKJ9coruzuWVhQKiqjKCnMb4dwB4QGaK0SzxFvqHLqthPjP9JqpXVTpSUIlTijOyfdobTy85zmnbWhggqiojA7jDPXPawSa8R/HmABFhZPxQOqKAqr4OwHkdVRdbzfEiQi16r0vvgWjuVG82k0RuLsjJYpTEXiLy817P3IJ2TlXpFkeJpmTpPRh7DURVZfwdXZqYB6ZEYTa0PUXkzhKNrcY2zNmC5+69C4//CBEpzY2jh9hbIJphniDMrRF1xGK4zT5Dgt3otTP1g5bPlc7bpRzG2Vee+fcWEabq6F3pHRBVlZq1UyyCoRTBaAw+eEhuVIrcgKoyPQdDnEoEHLuB0Qvn2SLCHLC9Kr0Coqoy3+YXADy3IJWYsIn+ioOrWkGisylV5VmRZ8aS5VcAtuubOao3QFRVZsDm2WHW7NcpkzqAMIVaHT9bCU8radLgKK7uW8KqXgBRVV9jau1SyYo4GeS8Bw6csGN0DdVNRYG5AtE0aMzncvxUvZ/+Jaatp3Y0Knnv9M0Mbw4UiKPA3IBo0d1MocfI+ZKFMYQ7i8hCeumXJNTQVjkKzAWIqsr7/XgefF65oY5auo0XwqQk4y3cv6G5VUqB4kC0tAq02XWduLdtCnurum7r+PD78lOgKBAth+jldiFnaerSWM/LXYYyUKB3FCgGRLutiCDkVdSly8kiwqDeoQwU6CUFigBRVXnZCTWVzPZVuvBSz10HM0Vpsg/tpVAgOxDnzAnpvL2NiPwuhSjDswMFSlMgKxDtTMg78Up6y1RpyHCmr5Ymakx7qsps4CxMxXiLiDAdx1BWKQWyAXHOihlO56dEhHk2e1nMpY95VZj8ioVAZJjOeTkTFVuyrcOZSmLIwzPyd/XdS7KbiPAoVaxkAaKq8nZaXtf8lGIjmWyIouhWfXPsrdNCVQkGXlRaLcwWzkRVnS4EyxvDuw/Zpitsiw7QUdxYVfl+X5IydQKWWYA4Az04t5eKyGluIjoHonnMXFIosVMI570RSY0D0aE9VCiicoFXC/PyBLOHx4BUVXkjMOt1H8d56/1gO1zUrdcFzLDwcuzH3EAaM6wbDUiHpuLbWBrpb5Vx82Lds2xMBCOvXx/drd5ZMd/RT9vllp3Vm1gR7yHcJ/GdbI/nWLwismLerB0C3n3aFmB1zBSHj2gjQo6xtLUZ+J33JhIsjcXO4bny1TiwzgJEuLnsGohMJsuksvMqvHF2CxGhK1svSobFe5GI8Eo0nm8IOoq2TRy3jQ7khOQsx7VxGFcRuXwMB602HBABxxyhrZPT/J4ZiNvZ+d4HxBGX8xRG/ExIJp0D0c4gbGiehTcylQ40bduVuzxXETQUI0cimapyEdTF2mp/KD65858DHH/n30b/nwJQI21v9XwTM+FLBsQRRw5tsgGJhRIKg5KrZbypdsIRVXVrADRTrBszKZme4X15m/TtfvqIM2KIHORyBEtVkTIBnNKLOwN3n2UpkDZUepCTRymbfI3lUNYEgOhTzI0VTjMDUVXXMOIZwMazULWDd48UEWb/7mUxMYm7IsHUmk2sIlZdZBq2Fe+UBKLH3NIXOo+5SmqHbEy+G4ijNLKJHJHtVI8QE/2eCYimnKGG9EWpROj4ee6IW/Y50Nc4I0UTnhG4mzO9H0HmLR6xk+9w9x8DshQQewxC0o4bG89rySUFSAFu6j121Dmip50VmupZgciU9O9LpkD3LxwqIud3X223NXqUB0FtpareXTvYc7Ohyn5sZigBxAAIR8qdROr4lBqp9fjqaM1XavZan/mGEkrVruqGFBxb9WwcC+Tapuo1F00NRFXdHsD3Cl4sEpp3Gu837jM3dB2vcUX35xVg9Ci+JpQ0lfp8XiGdaSIbOCEN0eTMUSYS2j2bNg1rJ2TndMMlDepiZKzZpU2pFb2nVLldDBBrz/BMS2eNFTbbqYBoCWKvjZ2I6FFO9+CxItIHrhzVe1WlXcv5mfIdTsraGqejScLt1F4Q8sXcHDHg+cOmaT4hCGNsdPSjXdsCxBigkEtV26OYPvZMaSJ+hHY5au7M/XBsb40EIuea/R4dLey8v0K5NC0QeRlMydtgQ4Ri3pkNRYSXxixEMW8Pp8ammMIdcjwxNa7JHZSil1crmBuIBnYqGGiWctzPAcstsDa6jwAzIxAJOJ7H2BenKW30qql2yjY/n62Vf6tz4qrJp1oN253wA44EIulGTl5tZ8UYkoGoqrsD+GYb9Qv9fq6IvL5QW8nNZDQoNy1u5zye2l8qPbz+rbY5kEvznsPRmaziydPUDkE7Uki1AJHcPySacjzsF4FPIExtqqiBk+3xHF4v3BiDSrRaHbHKGp/pglWNz7dJQDSR9HpyodRZzvR8q79hpnajqs0IRAcG3xkxqm/TLECeXWMXab3+Etw7ZeANYjePCVFgj+GIrk+qSqmCG1m1jJ3uU4H4UQCHpQw447PXici2GeufuepMQBxr3QKLe5p+rzinNlViypWY8yGrGZlqzDmafR/FX1r999BLqEF0rHeDtrdWG2wMAVS1eg53rySZQhKBSBD6PM9Gm2o0EFV1RwttihlniWeOEpEPlmho2jYixTffguZi8+3KIzHNKXY6AiLrpKgbJY6RFokeNq7eKjcgGCluum8u0CZXPTcFraaKCgfq0rWwvgS4gaxJAaLRzSfBjI4ZUUC0OwpINLqy9aFwQBssQwqMGV2sWs0XqYslZnITOCK5IZUVIaf0EQeK5IgT8Xtt/UzcLNqq83Hm/VJpG5jrJCDyxt4zU3ub8fkrRGSnjPUXq3oRgRhLnID4V32d6vwsGQkyAnFsTkoBYps7XStHtKvSbgKwXuwEFHjuGBH5QIF2sjexjEA0LSttgyFO6Azazt2PojjPf9EmibaJaXC2pwazrjRJ8fAZO94nAtF3Jh07JMQA8WwAR7YNvPDvm4kI77rvfYmIvkiNEB8nmorRRKYsli6Iae2tiLur1D1SNtmZkIuzarZwZ8ZOQVk5N3JjqHvnJKULqdIolrYBbjjhFdQIREuFeGMP3Niq479NRDbqYtGUqCODiDT2KOkbECO0xBPeMC3O5C7MyWlak2Mna6Ah4OtcOui1VHuXCjUfd6ejwYqNtOYGx/eqScKovCIIJ2y2bUC8EMD+JRZsQhsfF5G+mFBau50BiOMQnb4A0cYYWqyORs7RYGzk5w/maUQOGpNlwHm9EJwuVtOJuSNTSGhCPOfVKBBaH0MueOTsbUCsaoODm0kQiKpKGx2vMOtbOUBEeOf9QpQOgciFw8jwsX9lkxauIo5FeX9MQ0wTu+nxUvWdrVY16rOZYqo2NP6dnIEccgSkCG7a1sWg76nHv5dt0xTSmjCrCYi+AOC2ToZ+bwIir0176bQVZ3yPkRa3Zqy/aNXTKmsMBD4Xrbr4lwWIBhwC0Oea5gA41oh6wEA6T8RYVswiMTbF6jwFI05qHjROzI2KGqk04PNJ5c+pKS/JEb0hVl4g2l0VNxRdkXGN3SUi68c9uhhPzQDEkMF6Iro8VqEQSy1b2ASgbzE3JklW1XqUumt2TS36hJrNUBv1rgaVLRUQEjCUJhiOFeusHkuSlOeCG0YIiBfMOSViaHCXiMieKSPvy7PmazgSyaoH9QAQGWZETsNnveJTg8g74SvZFRBbAEhRj31t9M4JaA+D3jLWJkHZdH70vm8xndws2K9qdMtiAFFVqZGkaWCdviziSj9OFZETetiv1i6pKkOfxqFELr1+IAKASgDauvjh4uZuPuHyFsoSTteramdmBWIAgNwcnM8ouU3UWcv6VbXjNdnvxsoXA7B7ryoKJ+erCXDEtogVtu2TAJqyFLjEzlEitC9RLQ3lR7WurPk8cJCIkFsvVKnFIFb7vtaTYo+/E4hcHC5u0aeo8e3sKxbmtEC097gRcAE64I2+zVE7py+noxHbm7h+wPrlYhO90e5NiyMAxMasBqHA4iZlTWo7E0BUVaZDvB0A77jvY9lBRK7qY8daJt8XjzYy6DadET2hM2MjcMB9bIWYNi0Q22jcoTa4ranOUn+woVSA2Dte80VOINI+x1CnvpaJQ31fO1nvV8CGNbr8pQWIvtAZFxTsWxwrYukyApHntthQqLaporgZOgcmi5/LwBGZh2abNqrN6fd7RYS3TC1cqZ0P2f8275iq0b56tnRj5znQpWZ0f/NyjlxA7HISGpzDo43usf3pPUe0rGw/jB3QHJ67SUQ2n0O7MzXpOR9OAKbNfFGzv7kgWyo56unbQ9rDLHbEmYhSebnBnMAxckydOYIvhGiqqgxzYrhTX8uVIvKcvnYu1K/aQlth84oAogPSeGH60i3WtaWuPzk5ojkVsH9Oo+jczth86y3IDfel0BuHmuIUbWzU0ijIEevZ+ti/4C1WI2WNBf4yP2ifjeVfFJF6+EoU8ef5UM2IvSKVexsQbX7oHjZ2yfKIck3uXdk5YsW84EvWW/cPHSWpCjh8Mxxqhammy/krCESf80LQZuqAuAcAps7vc+n1Vdw+wtXEUp9GM5RJrPHuhdqZszHfTE6OWB9z7VrwFDey7ACsSAg+s0+n5ouAuWqUhjIEMAfEvnrSVPt9loi8qc87hWdhuklPOr8BCGqHPd4pjen/SgKxOn4TO8khY/1Gs8YiFgZiPQi4VekkJpbe2WPboaPhmSJy9IIBkSIlRS2vwiHgCN2YSawmlraq9ucFxMrCJ2fkhuQTW0PTmc1MlVs0rXk8uSiTVnGbQNwFwGULsMDfIyLzvI04iURtt+oG7sFgG0EOV4u48F5m4uHK2c+IMYQxcY1gbEomzKpaN5eY9kLPWD/qYnNbLGO0Qb9t3oOiqaqeAWAROM0pInLiLJPQp3djPWNq4p4TdaNAaIqeXgCxwiF5LnbRFb4QquiUiaXmcxoXt9S+kSPeDGDT1Bfn8PzCiaYNu3L9khmvY3cNhO4OBXcfRpRqf96iaQMNQoDMJpZOu2ZLAXFR8r/Qs8YXCDstfefyXi2ZVKutrcJJaLrh80kG7lDyqtA9F6WJUtG0kttTe8kQsF6V0LVxXdKwNYtbrygydGZpKWCA3CR1o1kWgvwf/+EL2hLTkFUAAAAASUVORK5CYII=" alt="新零帮"></span><span class="app-grid" aria-hidden="true">${'<i></i>'.repeat(9)}</span><div class="topbar-search">${icon('search')}<input aria-label="搜索模块" placeholder="搜索模块" data-field="global-search"></div><div class="topbar-spacer"></div><div class="topbar-tools" aria-hidden="true">${icon('download')}${icon('settings')}</div><span class="topbar-organization">示例组织－管理中心${icon('down')}</span><div class="topbar-user"><span>演示用户<small>信息中心</small></span></div></header><aside class="sidebar"><div class="system-title">ERP连锁管理</div>${[['chart','看板'],['file','档案'],['delivery','配送'],['cart','采购'],['stock','库存'],['store','零售'],['chart','数据']].map(([glyph,name])=>`<button class="sidebar-item ${name==='配送'?'active':''}" data-action="${name==='配送'?'nav-menu':'unchanged-nav'}">${icon(glyph)}${name}</button>`).join('')}</aside><main class="workspace"><nav class="page-tabs" aria-label="工作区页签"><button data-action="unchanged-nav">看板</button><button data-action="baseline">门店订单</button><button class="${state.view==='config'?'active':''}" data-action="nav-config">补发申请配置${state.view==='config'?icon('close'):''}</button><button class="${state.view!=='config'?'active':''}" data-action="nav-list">补发申请单${state.view!=='config'?icon('close'):''}</button></nav><section class="content" id="page-content">${state.view==='config'?configuration():state.view==='list'?list():detail()}</section>${annotation()}</main></div>${demo()}<div id="modal-root"></div>`;}
+  function modalFrame(title,body,footer,size='medium'){return `<div class="modal-mask"><section class="modal ${size}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-header"><h2>${title}</h2><button class="close" data-action="close-modal" aria-label="关闭">${icon('close')}</button></header><div class="modal-body">${body}</div><footer class="modal-footer">${footer}</footer></section></div>`;}
+  function approvalModal(m){const applicable=db.reasons.filter(r=>r.orgs.includes(m.org)&&r.enabled);return modalFrame('审批设置',`<div class="dialog-form">${field('二级组织',select('setting.org',organizations,m.org,'请选择'),' ',true)}${field('补发原因',select('setting.reason',applicable,m.reason,'请选择',!m.org),' ',true)}${field('审核后走审批流',`<div class="radio-group"><label><input type="radio" name="requiresApproval" value="true" data-field="setting.go" ${!permission('config')?'disabled':''} ${m.go?'checked':''}>是</label><label><input type="radio" name="requiresApproval" value="false" data-field="setting.go" ${!permission('config')?'disabled':''} ${!m.go?'checked':''}>否</label></div>`)}</div>`,`${btn('取消','close-modal')}${btn('保存','save-setting','save',!m.org||!m.reason||!permission('config'))}`,'medium');}
+  function pickerRows(m){const ids=m.target==='reason'?products.map(p=>p.id):(reason(state.working?.reason)?.products||[]);const query=(state.pickerQuery||'').toLowerCase(),keyword=(state.pickerKeyword||'').toLowerCase();return products.filter(p=>ids.includes(p.id)&&(state.pickerTab!=='selected'||state.picker.includes(p.id))&&(!state.pickerCategory||state.pickerCategory==='example-material')&&(!state.pickerTag||(state.pickerTag==='example-tag-a'?['p1','p3']:['p2']).includes(p.id))&&(!query||`${p.name} ${p.code} ${p.barcode}`.toLowerCase().includes(query))&&(!keyword||`${p.name} ${p.code} ${p.barcode}`.toLowerCase().includes(keyword)));}
+  function pickerModal(m){const available=pickerRows(m);return modalFrame('选择商品',`<div class="toolbar"><div style="width:160px">${select('picker.category',[{id:'example-material',name:'示例物料分类'}],state.pickerCategory||'','商品分类')}</div><div style="width:240px">${text('picker.query',state.pickerQuery,false,'请输入关键字')}</div>${btn('查询','query-picker','search')}${btn('全选','check-products')}</div><div class="filters">${field('关键字',text('picker.keyword',state.pickerKeyword||''))}${field('商品标签',select('picker.tag',[{id:'example-tag-a',name:'示例标签A'},{id:'example-tag-b',name:'示例标签B'}],state.pickerTag||'','全部'))}</div><div class="tabs"><button class="${state.pickerTab!=='selected'?'active':''}" data-action="available-tab">选择列表</button><button class="${state.pickerTab==='selected'?'active':''}" data-action="picked-tab">已选列表（${state.picker.length}）</button></div><div class="table-wrap"><table class="table" style="min-width:1144px"><colgroup>${[44,150,140,220,160,100,100,100,130].map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead><tr><th class="check"><input type="checkbox" aria-label="全选商品" data-action="check-products" ${available.length&&available.every(p=>state.picker.includes(p.id))?'checked':''}></th><th>代码</th><th>条码</th><th>商品名称</th><th>采购规格</th><th>配送单位</th><th>商品类型</th><th>基本单位</th><th>保质期</th></tr></thead><tbody>${available.map(p=>`<tr class="${state.picker.includes(p.id)?'selected':''}"><td class="check"><input type="checkbox" aria-label="选择${p.name}" data-product-check="${p.id}" ${state.picker.includes(p.id)?'checked':''}></td><td>${p.code}</td><td>${p.barcode}</td><td>${p.name}</td><td>${p.spec}</td><td>${p.unit}</td><td>${esc(p.type||'—')}</td><td>${p.basic}</td><td>${esc(p.shelfLife||'—')}</td></tr>`).join('')}</tbody></table>${!available.length?'<div class="empty">没有符合查询条件的数据<br>请修改条件后重新查询</div>':''}</div>${pagination(available.length,state.picker.length)}`,`<span class="selection">已选中 ${state.picker.length} 条</span>${btn('取消','close-modal')}${btn('确定','confirm-products')}`,'');}
+  function reasonModal(m){return modalFrame(m.id?'编辑补发配置':'新增补发配置',`<div style="font-size:14px;font-weight:600;margin-bottom:14px">配置信息</div><div class="dialog-form">${field('原因名称',text('reason.name',m.name),'',true)}${field('原因说明',`<div class="control-wrap" style="display:block"><textarea class="control" data-field="reason.description" aria-label="原因说明" maxlength="200">${esc(m.description)}</textarea><small data-counter="reason.description" style="position:absolute;right:8px;bottom:4px;color:#92969e">${m.description.length}/200</small></div>`)}${field('应用组织',`<div class="control-wrap"><input class="control" aria-label="应用组织" readonly value="${esc(m.orgs.map(orgName).join('、'))}" placeholder="请选择"><button class="icon-end" data-action="pick-reason-organizations" aria-label="选择应用组织">${icon('search')}</button></div>`,'',true)}${field('状态',`<div class="radio-group"><label><input type="radio" name="reason-enabled" data-field="reason.enabled" value="true" ${m.enabled!==false?'checked':''}>启用</label><label><input type="radio" name="reason-enabled" data-field="reason.enabled" value="false" ${m.enabled===false?'checked':''}>停用</label></div>`)}</div><div class="detail-table-toolbar" style="margin-top:18px"><span style="font-size:14px;font-weight:600;margin-right:auto">绑定商品</span>${btn('添加商品','pick-reason-products','plus')}</div><div class="table-wrap" style="min-height:140px"><table class="table"><colgroup><col style="width:150px"><col><col style="width:150px"><col style="width:80px"></colgroup><thead><tr><th>商品编码</th><th>商品名称</th><th>规格</th><th>操作</th></tr></thead><tbody>${m.products.map(id=>{const p=product(id);return `<tr><td>${p.code}</td><td>${p.name}</td><td>${p.spec}</td><td><button class="link" data-action="remove-bound-product" data-id="${id}">移除</button></td></tr>`;}).join('')}</tbody></table>${!m.products.length?'<div class="empty" style="padding:35px 12px">没有符合查询条件的数据</div>':''}</div>`,`${btn('取消','close-modal')}${btn('保存','save-reason','save')}`,'medium');}
+  function renderModal(){const root=$('#modal-root');if(!root)return;const m=state.modal;if(!m){root.innerHTML='';enhanceControls();return;}if(m.type==='approval')root.innerHTML=approvalModal(m);else if(m.type==='products')root.innerHTML=pickerModal(m);else if(m.type==='reason')root.innerHTML=reasonModal(m);else if(m.type==='delete')root.innerHTML=modalFrame('删除确认',`确认删除已选的 ${m.ids.length} 张补发申请单？`,`${btn('取消','close-modal')}${btn('确定','confirm-delete')}`,'small');else if(m.type==='void')root.innerHTML=modalFrame('作废确认','确认作废当前申请并结束本次审批？',`${btn('取消','close-modal')}${btn('确定','confirm-void')}`,'small');else if(m.type==='scope')root.innerHTML=scopeModal(m);else if(m.type==='message')root.innerHTML=modalFrame(esc(m.title),`<div style="line-height:24px">${esc(m.message).replace(/\n/g,'<br>')}</div>`,btn('确定','close-modal'),'small');enhanceControls();}
+  function render(){document.body.classList.toggle('annotated',state.note);document.body.dataset.view=state.view;const demoControl=$('#demo-control');if(demoControl)state.demoOpen=demoControl.open;$('#app').innerHTML=shell();renderModal();}
+  function validate(r){if(!r.store)return '请选择申请门店';if(!r.reason)return '请选择补发原因';if(!r.lines.length)return '请添加补发商品';if(r.lines.some(x=>!Number.isFinite(Number(x.qty))||Number(x.qty)<=0))return '申请数量必须大于0';if(r.lines.some(x=>!x.proof))return '请补齐逐商品图片凭证';return '';}
+  function saveRecord(auditing=false){const r=state.working;if(!r)return false;if(!auditing&&!permission('edit'))return false;const error=validate(r);if(error){notify(error);return false;}if(!r.id)r.id=`BF-DEMO-${String(Math.max(0,...db.records.map(x=>Number(x.id.split('-').pop())))+1).padStart(3,'0')}`;const i=db.records.findIndex(x=>x.id===r.id);if(i<0)db.records.unshift(clone(r));else db.records[i]=clone(r);state.currentId=r.id;persist();return true;}
+  function generate(record){if(record.order)return;record.failure='';if(state.outcome==='saveFail'){record.failure='配送中心或发货仓未配置';return;}record.order=`DD-DEMO-${record.id.split('-').pop()}`;if(state.outcome==='auditFail'){record.orderStatus='制单';record.failure='商品不在有效补货范围内';}else record.orderStatus='已审核';}
+  function audit(){const r=state.working;if(!r||r.status!=='制单'||!permission('audit'))return;if(!saveRecord(true))return;r.requiresApproval=requires(r.org,r.reason);if(r.requiresApproval&&state.outcome==='approvalFail'){r.status='制单';saveRecord(true);render();notify('审批发起失败，单据仍为制单状态，请稍后重新审核。');return;}r.status='审核';r.audited=now();r.reject='';r.failure='';if(r.requiresApproval){r.approval='审批中';}else{r.approval='';generate(r);}saveRecord(true);render();notify(r.requiresApproval?'审核成功，已发起审批。审批通过后生成门店订单。':r.orderStatus==='已审核'?'审核通过，门店订单已生成并审核。':`补发申请单审核通过。${r.failure||'门店订单处理中'}`);}
+  function deleteSelected(){const ids=state.selected.filter(id=>db.records.some(r=>r.id===id));if(!permission('delete')||!ids.length)return;const invalid=ids.filter(id=>{const r=db.records.find(x=>x.id===id);return r.status!=='制单'||r.approval==='审批中';});if(invalid.length){notify(`以下单据不是可删除的制单状态，本次全部未删除：\n${invalid.join('\n')}`);return;}state.modal={type:'delete',ids};renderModal();}
+  function updateWorking(){if(state.currentId&&db.records.some(r=>r.id===state.currentId))state.working=clone(db.records.find(r=>r.id===state.currentId));}
+  function resetFilters(){state.filters={number:'',store:'',reason:'',status:'',approval:'',time:'申请时间',grain:'日',start:TODAY,end:TODAY};}
+  function download(kind,records){const rows=kind==='明细'?records.flatMap(r=>r.lines.map(x=>{const p=product(x.id);return [r.id,storeName(r.store),reasonName(r.reason),p.code,p.name,p.spec,x.qty];})):records.map(r=>[r.id,storeName(r.store),orgName(r.org),reasonName(r.reason),r.status,r.approval||'',r.order,r.orderStatus,r.applicant,r.created]);const headers=kind==='明细'?['申请单号','申请门店','补发原因','商品编码','商品名称','规格','申请数量']:['申请单号','申请门店','所属二级组织','补发原因','单据状态','审批状态','关联门店订单','门店订单状态','申请人','申请时间'];const csv='\ufeff'+[headers,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`补发申请单${kind}_示例.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  function scopeModal(m){const rows=m.items.filter(x=>!m.query||`${x.name} ${x.id}`.toLowerCase().includes(m.query.toLowerCase()));const selected=id=>m.multiple?m.selected.includes(id):m.selected===id;return modalFrame(m.title,`<div class="filters">${field('关键字',text('scope.query',m.query,false,'请输入关键字'))}<div>${btn('查询','scope-query','search')}</div></div><div class="table-wrap"><table class="table"><colgroup><col style="width:44px"><col style="width:150px"><col></colgroup><thead><tr><th class="check">${m.multiple?`<input type="checkbox" aria-label="全选组织" data-action="scope-all" ${rows.length&&rows.every(x=>selected(x.id))?'checked':''}>`:''}</th><th>代码</th><th>名称</th></tr></thead><tbody>${rows.map(x=>`<tr class="${selected(x.id)?'selected':''}"><td class="check"><input type="${m.multiple?'checkbox':'radio'}" name="scope-choice" data-scope-choice="${esc(x.id)}" aria-label="选择${esc(x.name)}" ${selected(x.id)?'checked':''}></td><td>${esc(x.id.toUpperCase())}</td><td>${esc(x.name)}</td></tr>`).join('')}</tbody></table>${!rows.length?'<div class="empty">没有符合查询条件的数据<br>请修改条件后重新查询</div>':''}</div>${pagination(rows.length,m.multiple?m.selected.length:m.selected?1:0)}`,`${btn('取消','close-modal')}${btn('确定','scope-confirm')}`,'medium');}
+  function openScope(native){const key=native.dataset.field;state.selectorParent=state.modal;state.modal={type:'scope',field:key,title:key.endsWith('org')?'选择二级组织':key.endsWith('store')?'选择门店':'选择商品',items:[...native.options].filter(x=>x.value).map(x=>({id:x.value,name:x.textContent})),selected:native.value,query:''};renderModal();}
+  function confirmScope(){const m=state.modal;if(m.type!=='scope')return;state.modal=state.selectorParent||null;state.selectorParent=null;if(m.multiple&&state.modal&&m.field==='reason.orgs'){state.modal.orgs=[...m.selected];renderModal();return;}renderModal();const native=document.querySelector(`select[data-field="${m.field}"]`);if(native){native.value=m.selected;native.dispatchEvent(new Event('input',{bubbles:true}));native.dispatchEvent(new Event('change',{bubbles:true}));if(!state.modal)render();}}
+  function enhanceControls(){
+    if(!document.createElement)return;
+    const searchFields=['config.org','config.product','filter.store','detail.store','setting.org'];
+    document.querySelectorAll('select:not([data-enhanced])').forEach(native=>{
+      native.dataset.enhanced='true';const wrapper=document.createElement('div');wrapper.className='control-wrap xlb-combobox';wrapper.style.minWidth='0';wrapper.style.flex=native.dataset.field==='filter.grain'?'0 0 54px':'1';if(native.dataset.field==='filter.grain')wrapper.style.width='54px';native.parentNode.insertBefore(wrapper,native);wrapper.append(native);native.hidden=true;
+      if(searchFields.includes(native.dataset.field)){
+        const input=document.createElement('input');input.className='control';input.readOnly=true;input.disabled=native.disabled;input.value=native.value?native.selectedOptions[0]?.textContent||'':'';input.placeholder=native.options[0]?.textContent||'请选择';input.setAttribute('aria-label',native.getAttribute('aria-label')||'选择');
+        const button=document.createElement('button');button.type='button';button.className='icon-end';button.disabled=native.disabled;button.setAttribute('aria-label',`搜索${native.dataset.field.endsWith('org')?'二级组织':native.dataset.field.endsWith('store')?'门店':'商品'}`);button.innerHTML=icon('search');button.addEventListener('click',()=>openScope(native));input.addEventListener('click',()=>{if(!native.disabled)openScope(native);});wrapper.append(input,button);return;
+      }
+      const button=document.createElement('button');button.type='button';button.className='control';button.style.cssText='width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px;padding-right:8px;';if(native.dataset.field==='filter.grain')button.style.cssText+='height:26px;border:0;border-right:1px solid #e5e6ea;border-radius:0;';button.disabled=native.disabled;button.setAttribute('role','combobox');button.setAttribute('aria-label',native.getAttribute('aria-label')||'选择');button.setAttribute('aria-expanded','false');button.setAttribute('aria-haspopup','listbox');button.innerHTML=`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(native.selectedOptions[0]?.textContent||'请选择')}</span><span style="color:#c3c6ce">${icon('down')}</span>`;
+      const open=()=>{document.querySelectorAll('.xlb-combobox .dropdown-menu').forEach(x=>x.remove());const menu=document.createElement('div');menu.className='dropdown-menu';menu.style.cssText='display:block;right:0;min-width:100%;max-height:240px;overflow-y:auto;';menu.setAttribute('role','listbox');[...native.options].forEach((option,index)=>{const opt=document.createElement('button');opt.type='button';opt.setAttribute('role','option');opt.setAttribute('aria-selected',String(option.selected));opt.disabled=option.disabled;opt.textContent=option.textContent;if(option.selected)opt.style.cssText='color:#3d66fe;background:#e8f1ff';opt.addEventListener('click',()=>{native.selectedIndex=index;menu.remove();button.setAttribute('aria-expanded','false');button.querySelector('span').textContent=option.textContent;native.dispatchEvent(new Event('input',{bubbles:true}));native.dispatchEvent(new Event('change',{bubbles:true}));});menu.append(opt);});wrapper.append(menu);button.setAttribute('aria-expanded','true');};
+      button.addEventListener('click',()=>{if(wrapper.querySelector('.dropdown-menu')){wrapper.querySelector('.dropdown-menu').remove();button.setAttribute('aria-expanded','false');}else open();});button.addEventListener('keydown',event=>{if(['ArrowDown','ArrowUp','Enter',' '].includes(event.key)){event.preventDefault();if(!wrapper.querySelector('.dropdown-menu'))open();const buttons=[...wrapper.querySelectorAll('[role=option]')];buttons[native.selectedIndex<0?0:native.selectedIndex]?.focus();}else if(event.key==='Escape'){wrapper.querySelector('.dropdown-menu')?.remove();button.setAttribute('aria-expanded','false');}});wrapper.append(button);
+    });
+  }
+  const iso=date=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  function closeCalendar(){state.calendarOpen=false;document.querySelector('.calendar-popup')?.remove();}
+  function openCalendar(el){if(!document.createElement)return;const rect=el.closest('.date-range').getBoundingClientRect();state.calendarOpen=true;state.calendarLeft=Math.min(rect.left,innerWidth-600);state.calendarTop=Math.min(rect.bottom+4,innerHeight-340);state.calendarMonth=Number((state.filters.start||TODAY).slice(5,7))-1;state.calendarYear=Number((state.filters.start||TODAY).slice(0,4));state.calendarPending='';renderCalendar();}
+  function monthPanel(year,month,index){const base=new Date(year,month,1,12),y=base.getFullYear(),m=base.getMonth(),offset=(base.getDay()+6)%7;const dates=Array.from({length:42},(_,i)=>{const d=new Date(y,m,i-offset+1,12);const value=iso(d);return {d,value,outside:d.getMonth()!==m};});let body='';for(let row=0;row<6;row++)body+=`<tr>${dates.slice(row*7,row*7+7).map(x=>`<td><button data-action="calendar-date" data-date="${x.value}" class="${x.outside?'outside':''} ${x.value===state.calendarPending||x.value===state.filters.start||x.value===state.filters.end?'selected':''} ${x.value>state.filters.start&&x.value<state.filters.end?'range':''}">${x.d.getDate()}</button></td>`).join('')}</tr>`;return `<section class="calendar-month"><header class="calendar-header">${index===0?'<button data-action="calendar-prev" aria-label="上个月">‹</button>':'<span></span>'}<span>${y}年 ${m+1}月</span>${index===1?'<button data-action="calendar-next" aria-label="下个月">›</button>':'<span></span>'}</header><table class="calendar-grid"><thead><tr>${['一','二','三','四','五','六','日'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></section>`;}
+  function renderCalendar(){document.querySelector('.calendar-popup')?.remove();if(!state.calendarOpen)return;const popup=document.createElement('div');popup.className='calendar-popup';popup.setAttribute('role','dialog');popup.setAttribute('aria-label','日期范围');popup.style.left=`${Math.max(8,state.calendarLeft)}px`;popup.style.top=`${Math.max(8,state.calendarTop)}px`;popup.innerHTML=`<aside class="calendar-shortcuts">${[['today','今天'],['yesterday','昨天'],['week','本周'],['lastWeek','上周'],['month','本月'],['lastMonth','上月'],['year','今年']].map(([key,name])=>`<button data-action="calendar-shortcut" data-shortcut="${key}">${name}</button>`).join('')}</aside><div class="calendar-months">${monthPanel(state.calendarYear,state.calendarMonth,0)}${monthPanel(state.calendarYear,state.calendarMonth+1,1)}</div>`;document.body.append(popup);}
+  function chooseCalendar(value){if(!state.calendarPending){state.calendarPending=value;renderCalendar();return;}let start=state.calendarPending<value?state.calendarPending:value,end=state.calendarPending<value?value:state.calendarPending;if(state.filters.grain==='周'){let d=new Date(`${start}T12:00:00`);d.setDate(d.getDate()-((d.getDay()+6)%7));start=iso(d);d=new Date(`${end}T12:00:00`);d.setDate(d.getDate()+6-((d.getDay()+6)%7));end=iso(d);}else if(state.filters.grain==='月'){start=`${start.slice(0,7)}-01`;const d=new Date(`${end}T12:00:00`);end=iso(new Date(d.getFullYear(),d.getMonth()+1,0,12));}else if(state.filters.grain==='年'){start=`${start.slice(0,4)}-01-01`;end=`${end.slice(0,4)}-12-31`;}state.filters.start=start;state.filters.end=end;closeCalendar();render();}
+  function calendarShortcut(key){let start=new Date(`${TODAY}T12:00:00`),end=new Date(start);if(key==='yesterday'){start.setDate(start.getDate()-1);end=new Date(start);}else if(key==='week'||key==='lastWeek'){start.setDate(start.getDate()-((start.getDay()+6)%7)-(key==='lastWeek'?7:0));end=new Date(start);end.setDate(end.getDate()+6);}else if(key==='month'||key==='lastMonth'){start=new Date(start.getFullYear(),start.getMonth()-(key==='lastMonth'?1:0),1,12);end=new Date(start.getFullYear(),start.getMonth()+1,0,12);}else if(key==='year'){start=new Date(start.getFullYear(),0,1,12);end=new Date(start.getFullYear(),11,31,12);}state.filters.start=iso(start);state.filters.end=iso(end);closeCalendar();render();}
+  document.addEventListener('click',event=>{
+    const el=event.target.closest('[data-action]');if(!el||el.disabled)return;const action=el.dataset.action,id=el.dataset.id;
+    if(action==='open-calendar'){openCalendar(el);return;}else if(action==='calendar-date'){chooseCalendar(el.dataset.date);return;}else if(action==='calendar-shortcut'){calendarShortcut(el.dataset.shortcut);return;}else if(action==='calendar-prev'||action==='calendar-next'){state.calendarMonth+=action==='calendar-prev'?-1:1;renderCalendar();return;}else if(action==='scope-all'){const m=state.modal,ids=m.items.filter(x=>!m.query||`${x.name} ${x.id}`.toLowerCase().includes(m.query.toLowerCase())).map(x=>x.id);m.selected=ids.every(id=>m.selected.includes(id))?m.selected.filter(id=>!ids.includes(id)):[...new Set([...m.selected,...ids])];renderModal();return;}else if(action==='scope-query'){renderModal();return;}else if(action==='scope-confirm'){confirmScope();return;}else if(action==='nav-config')navigate('config');else if(action==='nav-list'||action==='back')navigate('list');else if(action==='new')newRecord();else if(action==='open')openRecord(id);
+    else if(action==='query-list'||action==='query-config')render();else if(action==='reset-list'){resetFilters();state.selected=[];render();}else if(action==='reset-config'){state.configFilters={name:'',enabled:'启用',org:'',product:''};state.selectedReasons=[];render();}
+    else if(action==='approval-settings'){state.modal={type:'approval',org:'',reason:'',go:true};renderModal();}else if(action==='save-setting'){const m=state.modal;if(!m.org||!m.reason||!permission('config'))return;db.settings[`${m.org}|${m.reason}`]=m.go;db.history.push({time:now(),message:`${orgName(m.org)}＋${reasonName(m.reason)}：审核后${m.go?'走':'不走'}审批流`});persist();state.modal=null;render();notify('审批设置已保存，仅对后续审核的申请生效。');}
+    else if(action==='close-modal'){if(state.selectorParent){state.modal=state.selectorParent;state.selectorParent=null;}else if(state.parentModal){state.modal=state.parentModal;state.parentModal=null;}else state.modal=null;renderModal();}
+    else if(action==='new-reason'||action==='edit-reason'){state.modal={type:'reason',...(action==='edit-reason'?clone(reason(id)):{id:'',name:'',description:'',orgs:[],products:[]})};renderModal();}
+    else if(action==='pick-reason-organizations'){state.selectorParent=state.modal;state.modal={type:'scope',field:'reason.orgs',title:'选择二级组织',items:organizations,selected:[...state.modal.orgs],multiple:true,query:''};renderModal();}else if(action==='remove-bound-product'){state.modal.products=state.modal.products.filter(x=>x!==id);renderModal();}
+    else if(action==='save-reason'){const m=state.modal;if(!m.name||!m.orgs.length||!m.products.length)return notify('请填写原因名称、应用组织及绑定商品');const value={...m,id:m.id||`r${Date.now()}`,enabled:m.enabled??true};delete value.type;const idx=db.reasons.findIndex(x=>x.id===value.id);if(idx<0)db.reasons.push(value);else db.reasons[idx]=value;persist();state.modal=null;render();}
+    else if(action==='toggle-reason'){const r=reason(id);r.enabled=!r.enabled;persist();render();}
+    else if(action==='history')notify(db.history.length?db.history.map(x=>`${x.time}　${x.message}`).join('\n'):'暂无修改记录','修改记录');
+    else if(action==='reason-products'){const r=reason(id);notify(r.products.map(p=>{const x=product(p);return `${x.code}　${x.name}`;}).join('\n'),'绑定商品');}
+    else if(action==='pick-products'){state.picker=state.working.lines.map(x=>x.id);state.pickerQuery='';state.pickerKeyword='';state.pickerCategory='';state.pickerTag='';state.pickerTab='available';state.modal={type:'products',target:'application'};renderModal();}
+    else if(action==='pick-reason-products'){state.parentModal=state.modal;state.picker=[...state.modal.products];state.pickerQuery='';state.pickerKeyword='';state.pickerCategory='';state.pickerTag='';state.pickerTab='available';state.modal={type:'products',target:'reason',ids:[...state.picker]};renderModal();}
+    else if(action==='query-picker')renderModal();else if(action==='confirm-products'){if(state.modal.target==='reason'){state.parentModal.products=[...state.picker];state.modal=state.parentModal;state.parentModal=null;renderModal();}else{state.working.lines=state.picker.map(pid=>state.working.lines.find(x=>x.id===pid)||line(pid));state.modal=null;render();}}
+    else if(action==='picked-tab'||action==='available-tab'){state.pickerTab=action==='picked-tab'?'selected':'available';renderModal();}
+    else if(action==='remove-line'){state.working.lines=state.working.lines.filter(x=>x.id!==id);render();}
+    else if(action==='proof'){const ln=state.working.lines.find(x=>x.id===id);if(state.working.status==='制单'&&permission('edit')){ln.proof=true;render();}notify('此处使用示例凭证，未上传真实图片。','图片凭证');}
+    else if(action==='save'){if(saveRecord()){render();notify('保存成功');}}else if(action==='audit')audit();else if(action==='delete')deleteSelected();
+    else if(action==='confirm-delete'){db.records=db.records.filter(r=>!state.modal.ids.includes(r.id));state.selected=[];state.modal=null;persist();render();notify('删除成功');}
+    else if(action==='retry'){const r=db.records.find(x=>x.id===id);if(!r||!canRetry(r))return;generate(r);persist();updateWorking();render();notify(r.orderStatus==='已审核'?'重试成功，门店订单已审核。':r.failure||'门店订单已生成');}
+    else if(action==='void'){state.modal={type:'void'};renderModal();}else if(action==='confirm-void'){const r=state.working;if(r.status==='审核'&&r.approval==='审批中'&&!r.order){r.status='作废';r.approval='';saveRecord(true);state.modal=null;render();}}
+    else if(action==='tab-basic'||action==='tab-other'){state.detailTab=action==='tab-basic'?'basic':'other';render();}
+    else if(action==='export-list')download('列表',listRows());else if(action==='export-detail')download('明细',db.records.filter(r=>state.selected.includes(r.id)));else if(action==='export-current')download('明细',[state.working]);
+    else if(action==='import')notify('导入沿用现有补发申请模板；本演示可通过【新增】创建示例单据。','导入');
+    else if(action==='demo-reset'){db=seed();persist();state.selected=[];state.selectedReasons=[];state.currentId='';state.working=null;state.view='config';resetFilters();state.modal=null;render();}
+    else if(action==='demo-approve'||action==='demo-reject'){const r=db.records.find(x=>x.id===state.demoRecord);if(!r||r.approval!=='审批中'){notify('请选择审批中的示例单据');return;}if(action==='demo-approve'){r.approval='已通过';generate(r);}else{r.approval='已驳回';r.status='制单';r.reject='示例审批意见：请补充损坏说明后重新审核';}persist();updateWorking();render();}
+    else if(action==='check-all'){const rows=listRows();state.selected=rows.every(r=>state.selected.includes(r.id))?state.selected.filter(id=>!rows.some(r=>r.id===id)):[...new Set([...state.selected,...rows.map(r=>r.id)])];render();}
+    else if(action==='check-all-reasons'){const ids=db.reasons.map(r=>r.id);state.selectedReasons=ids.every(id=>state.selectedReasons.includes(id))?[]:ids;render();}
+    else if(action==='check-products'){const ids=pickerRows(state.modal).map(x=>x.id);state.picker=ids.every(x=>state.picker.includes(x))?state.picker.filter(x=>!ids.includes(x)):[...new Set([...state.picker,...ids])];renderModal();}
+    else if(action==='toggle-filters'){const f=$('#filter-panel');if(f)f.hidden=!f.hidden;}
+    else if(action==='columns')notify('列顺序、宽度及横向滚动沿用当前新零帮列表；本演示未改变列配置能力。','列配置');
+    else if(action==='baseline'||action==='unchanged-nav')notify('该入口为既有系统导航，本原型仅演示补发申请单及补发申请配置。');
+    else if(action==='nav-menu')notify('通过顶部【补发申请配置】【补发申请单】页签切换本次演示页面。');
+  });
+  document.addEventListener('change',event=>{
+    const el=event.target;
+    if(el.dataset.recordCheck){const id=el.dataset.recordCheck;state.selected=el.checked?[...new Set([...state.selected,id])]:state.selected.filter(x=>x!==id);render();return;}
+    if(el.dataset.reasonCheck){const id=el.dataset.reasonCheck;state.selectedReasons=el.checked?[...state.selectedReasons,id]:state.selectedReasons.filter(x=>x!==id);render();return;}
+    if(el.dataset.productCheck){const id=el.dataset.productCheck;state.picker=el.checked?[...new Set([...state.picker,id])]:state.picker.filter(x=>x!==id);renderModal();return;}
+    if(el.dataset.scopeChoice){const id=el.dataset.scopeChoice;if(state.modal.multiple)state.modal.selected=el.checked?[...new Set([...state.modal.selected,id])]:state.modal.selected.filter(x=>x!==id);else state.modal.selected=id;renderModal();return;}
+    if(el.dataset.reasonOrg){const id=el.dataset.reasonOrg;state.modal.orgs=el.checked?[...state.modal.orgs,id]:state.modal.orgs.filter(x=>x!==id);return;}
+    if(el.dataset.quantity){const ln=state.working.lines.find(x=>x.id===el.dataset.quantity);ln.qty=Number(el.value);render();return;}
+    const name=el.dataset.field;if(!name)return;const [group,key]=name.split('.');
+    if(group==='setting'){if(key==='org'){state.modal.org=el.value;state.modal.reason='';state.modal.go=true;}else if(key==='reason'){state.modal.reason=el.value;state.modal.go=requires(state.modal.org,el.value);}else state.modal.go=el.value==='true';renderModal();}
+    else if(group==='detail'&&key==='store'){state.working.store=el.value;state.working.org=stores.find(x=>x.id===el.value)?.org||'';state.working.reason='';state.working.lines=[];render();}
+    else if(group==='detail'&&key==='reason'){state.working.reason=el.value;state.working.lines=[];render();}
+    else if(group==='filter'){state.filters[key]=el.value;if(key==='grain'){const start=new Date(`${state.filters.start||TODAY}T12:00:00`);if(el.value==='周'){const day=start.getDay()||7;start.setDate(start.getDate()-day+1);const end=new Date(start);end.setDate(end.getDate()+6);state.filters.start=start.toISOString().slice(0,10);state.filters.end=end.toISOString().slice(0,10);}else if(el.value==='月'){const year=start.getFullYear(),month=start.getMonth();state.filters.start=`${year}-${String(month+1).padStart(2,'0')}-01`;state.filters.end=new Date(year,month+1,0,12).toISOString().slice(0,10);}else if(el.value==='年'){state.filters.start=`${start.getFullYear()}-01-01`;state.filters.end=`${start.getFullYear()}-12-31`;}else{state.filters.start=TODAY;state.filters.end=TODAY;}render();}}
+    else if(group==='config')state.configFilters[key]=el.value;
+    else if(group==='picker'){if(key==='category')state.pickerCategory=el.value;else if(key==='tag')state.pickerTag=el.value;}
+    else if(group==='demo'){state.demoOpen=true;if(key==='record')state.demoRecord=el.value;else state[key]=el.value;render();}
+  });
+  document.addEventListener('input',event=>{const el=event.target,name=el.dataset.field;if(!name)return;const [group,key]=name.split('.');if(group==='filter')state.filters[key]=el.value;else if(group==='config')state.configFilters[key]=el.value;else if(group==='detail'&&key==='description')state.working.description=el.value;else if(group==='picker'){if(key==='query')state.pickerQuery=el.value;else if(key==='keyword')state.pickerKeyword=el.value;else if(key==='category')state.pickerCategory=el.value;else if(key==='tag')state.pickerTag=el.value;}else if(group==='reason')state.modal[key]=key==='enabled'?el.value==='true':el.value;else if(group==='scope')state.modal.query=el.value;if((group==='reason'||group==='detail')&&key==='description'){const counter=document.querySelector(`[data-counter="${name}"]`);if(counter)counter.textContent=`${el.value.length}/${group==='reason'?200:500}`;}});
+  document.addEventListener('click',event=>{if(!event.target.closest('.xlb-combobox'))document.querySelectorAll('.xlb-combobox .dropdown-menu').forEach(x=>x.remove());if(state.calendarOpen&&!event.target.closest('.calendar-popup,.date-range'))closeCalendar();});
+  if(state.view==='detail')openRecord(params.get('id')||db.records[0]?.id);else render();
+})();
+
+</script></body></html>
